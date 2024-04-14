@@ -1,0 +1,45 @@
+Need a function that takes in a dataset, and calulates the:
+    spamlikelis
+    hamlikelis
+    prior likelis
+
+Need to split dataset into 80% training and 20% eval
+
+Need to split 80% training dataset into 5 folds
+    1. for each fold
+        2. training use other folds
+        3. use model created on current fold
+        4. evaluate and save result
+
+Use NaiveBayes class? (what's in it though?)
+    initializes with attribute labels
+    has a sort of main function, does the actual algorithm
+    
+    naiveBayes function -> takes dataset
+        get the training dataset
+        gets likelis -> calculatesLikelihoods
+        applies likelis to test set - > evaluateModel
+        returns evaluation
+    
+    use new model on test dataset
+
+    evaluateModel function -> takes spamPrior, hamPrior, spamLikeliHoods, hamLikeliHoods, evalSet
+        for each email
+            loop through its attributes
+                if the mail has the attribute
+                    multiply by likelihoods
+            multiply by priors
+            add result to array
+    return result
+
+Pseudocode
+
+import dataset
+split dataset into 80% training and 20% eval
+split training into folds
+eval folds
+    for each fold
+        training use other folds
+        use model created on current fold
+        evaluate and save result
+return result? IDK
