@@ -14,19 +14,20 @@ def main(fileName, trainingPct):
 
     # get dataset
     dataset = importDataset("spambase.csv")
-
+    random.shuffle(dataset[1:])
+    
     # get training set
     trainingSize = math.floor(trainingPct * (len(dataset)))
     trainingSet = dataset[1:trainingSize + 1]
     random.shuffle(trainingSet)
 
     #  Get eval set
-    evalSet = dataset[trainingSize:]
+    TestSet = dataset[trainingSize:]
 
     foldResults = []
 
     NBAlgorithm = NaiveBayesModel(dataset[0])
-
+    
     # loop through training (increment by size of training // 5 for 5 cross validation)
     for fold in range(0, len(trainingSet) - (len(trainingSet) // K), len(trainingSet) // K):
         # evaluate fold
@@ -96,14 +97,15 @@ class NaiveBayesModel:
     
     def useModel(self, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet):
         emailPredictions = []
+        print(spamPrior, hamPrior)
         for email in range(len(evalSet)):
             emailsSpamLikelihoods = 1
             emailsHamLikelihoods = 1
 
             for attribute in range(len(self.labels) - 4):
                 if (float(evalSet[email][attribute]) > 0.0):
-                    emailsSpamLikelihoods *= spamLikelihoods[attribute]
-                    emailsHamLikelihoods *= hamLikelihoods[attribute]
+                    emailsSpamLikelihoods *= float(evalSet[email][attribute])#spamLikelihoods[attribute]#
+                    emailsHamLikelihoods *= float(evalSet[email][attribute])#hamLikelihoods[attribute]#
 
             emailsSpamLikelihoods *= spamPrior
             emailsHamLikelihoods *= hamPrior
