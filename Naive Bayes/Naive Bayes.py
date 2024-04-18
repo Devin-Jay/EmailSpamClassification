@@ -14,28 +14,29 @@ def main(fileName, trainingPct):
 
     # get dataset
     dataset = importDataset("spambase.csv")
-    random.shuffle(dataset[1:])
+
+    # initialize NaiveBayesModel class with data labels
+    NBAlgorithm = NaiveBayesModel(dataset[0])
+
+    #shuffle dataset
+    dataset = dataset[1:]
+    random.shuffle(dataset)
     
     # get training set
     trainingSize = math.floor(trainingPct * (len(dataset)))
-    trainingSet = dataset[1:trainingSize + 1]
+    trainingSet = dataset[:trainingSize + 1]
     random.shuffle(trainingSet)
 
-    #  Get eval set
-    TestSet = dataset[trainingSize:]
-
     foldResults = []
-
-    NBAlgorithm = NaiveBayesModel(dataset[0])
     
     # loop through training (increment by size of training // 5 for 5 cross validation)
     for fold in range(0, len(trainingSet) - (len(trainingSet) // K), len(trainingSet) // K):
         # evaluate fold
-        foldResults.append(NBAlgorithm.naiveBayes(fold+1, fold + len(trainingSet) // K, trainingSet))
+        foldResults.append(NBAlgorithm.naiveBayes(fold, fold + len(trainingSet) // K, trainingSet))
     
     print()
     print(foldResults)
-    wholeDatasetAverage = NBAlgorithm.naiveBayes(3680,len(dataset), dataset[1:])
+    wholeDatasetAverage = NBAlgorithm.naiveBayes(3680,len(dataset), dataset)
     print(wholeDatasetAverage)
 
 class NaiveBayesModel:
@@ -46,18 +47,11 @@ class NaiveBayesModel:
     def getClassifiedData(self, dataset, spam):
         classifiedData = []
 
-        for email in range(1, len(dataset)):
+        for email in range(len(dataset)):
             if (int(dataset[email][-1]) == spam):
                 classifiedData.append(dataset[email])
 
         return classifiedData
-
-    def getNumOf(self, target, dataset):
-        count = 0
-        for column in range(len(dataset[0])):
-            if (target in dataset[0][column]):
-                count += 1
-        return count
     
     def calculateLikelihoods(self, dataset):
         # get data that was classified as spam
@@ -95,18 +89,18 @@ class NaiveBayesModel:
 
         return spamPrior, hamPrior, spamLikelihoods, hamLikelihoods
     
-    def useModel(self, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet):
+    def useModelBagOfWords(self, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet):
         emailPredictions = []
-        print(spamPrior, hamPrior)
+
         for email in range(len(evalSet)):
             emailsSpamLikelihoods = 1
             emailsHamLikelihoods = 1
 
             for attribute in range(len(self.labels) - 4):
                 if (float(evalSet[email][attribute]) > 0.0):
-                    emailsSpamLikelihoods *= float(evalSet[email][attribute])#spamLikelihoods[attribute]#
-                    emailsHamLikelihoods *= float(evalSet[email][attribute])#hamLikelihoods[attribute]#
-
+                    emailsSpamLikelihoods *= spamLikelihoods[attribute]
+                    emailsHamLikelihoods *= hamLikelihoods[attribute]
+            
             emailsSpamLikelihoods *= spamPrior
             emailsHamLikelihoods *= hamPrior
 
@@ -117,6 +111,26 @@ class NaiveBayesModel:
         
         return emailPredictions
     
+    def useModel(self, spamPrior, hamPrior, evalSet):
+        emailPredictions = []
+
+        for email in range(len(evalSet)):
+            emailsLikelihoods = 1
+
+            for attribute in range(len(self.labels) - 4):
+                if (float(evalSet[email][attribute]) > 0.0):
+                    emailsLikelihoods *= float(evalSet[email][attribute])
+            
+            spamLikelihood = spamPrior * emailsLikelihoods
+            hamLikelihood = hamPrior * emailsLikelihoods
+
+            if (spamLikelihood > hamLikelihood):
+                emailPredictions.append(1)
+            else:
+                emailPredictions.append(0)
+        
+        return emailPredictions
+
     def evaluateModel(self, result, evalSet):
         count = 0
         for email in range(len(evalSet)):
@@ -127,16 +141,18 @@ class NaiveBayesModel:
 
     def naiveBayes(self, evalStartIndex, evalEndIndex, dataset):
         # initialize training set (all other folds, not current fold)
-        trainingSet = dataset[evalEndIndex:len(dataset)] + dataset[:evalStartIndex]
+        trainingSet = dataset[:evalStartIndex] + dataset[evalEndIndex + 1:len(dataset)]
 
         # get likelihoods and priors
         spamPrior, hamPrior, spamLikelihoods, hamLikelihoods = self.calculateLikelihoods(trainingSet)
-        
+
         # get dataset to be tested on (current fold)
         evalSet = dataset[evalStartIndex:evalEndIndex]
 
         # test current model on current fold
-        result = self.useModel(spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet)
+        result = self.useModelBagOfWords(spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet)
+
+        test = self.useModel(spamPrior, hamPrior, evalSet)
 
         evaluation = self.evaluateModel(result, evalSet)
         return evaluation
