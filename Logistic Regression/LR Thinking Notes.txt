@@ -1,0 +1,27 @@
+Mean of spam
+
+python gradient descent for linear regression no libraries
+
+SSE = sum of (Y - f(x))^2
+class LogisticRegression
+    initialize with x values, y values, and learning rate
+
+    function that fits line to graph
+
+        initialize actualWeights to random numbers
+        get x values -> function
+        for i in iterations:
+            for each x in x values
+                update x value's weightCalculation using actualWeights
+                    -> add ( learningRate * (target value - predicted y val) * current email's attribute value ) to x's weightCalcuation
+            for each weight in actualWeights
+                set x value's actual weight to updated x value's weight + current actual weight
+    
+    function sigmoid
+        linearYVal = 0
+        for each attribute
+            linearYVal += Model[attribute] * XVal[attribute]
+        
+        # calculate sigmoid value
+        return 1 / (1 + exp(-linearYVal))
+            

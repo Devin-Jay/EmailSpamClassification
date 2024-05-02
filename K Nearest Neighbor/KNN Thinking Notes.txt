@@ -1,0 +1,15 @@
+Cosine similarity
+closer to 1 means similar
+
+class KNearestNeighbor
+    takes in attribute labels
+
+    evalEmail -> (email, trainingSet) -> predicts email classifier
+        calculate |V| for email (so don't have to keep calculating it)
+        for each email in the trainingSet
+            calculate cosine similarity between evalEmail and currentEmail -> function?
+
+    classifySet -> (evalSet, trainingSet) -> classifies set of emails
+
+        loop through emails
+            get predicted classifier -> evalEmail
