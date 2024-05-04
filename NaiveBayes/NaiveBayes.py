@@ -1,60 +1,3 @@
-import math
-import random
-
-K = 5
-
-def importDataset(fileName):
-    with open(fileName) as file:
-        dataset = file.readlines()
-        for email in range(len(dataset)):
-            dataset[email] = dataset[email].split(",")
-    return dataset
-
-def main(fileName, trainingPct):
-
-    # get dataset
-    dataset = importDataset("spambase.csv")
-
-    # initialize NaiveBayesModel class with data labels
-    NBAlgorithm = NaiveBayesModel(dataset[0])
-
-    #shuffle dataset
-    dataset = dataset[1:]
-    random.shuffle(dataset)
-    
-    # get training set
-    trainingSize = math.floor(trainingPct * (len(dataset)))
-    trainingSet = dataset[:trainingSize + 1]
-    random.shuffle(trainingSet)
-
-    # get evalSet
-    evalSet = dataset[trainingSize:]
-
-    foldResults = []
-    foldPriosAndLikelihoods = []
-    
-    # loop through training (increment by size of training // 5 for 5 cross validation)
-    for fold in range(0, len(trainingSet) - (len(trainingSet) // K), len(trainingSet) // K):
-        # evaluate fold
-        evaluation, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods = NBAlgorithm.naiveBayes(fold, fold + len(trainingSet) // K, trainingSet)
-        foldResults.append(evaluation)
-        foldPriosAndLikelihoods.append((spamPrior, hamPrior, spamLikelihoods, hamLikelihoods))
-    
-    # get best model from folds
-    bestModel = 0
-    for fold in range(len(foldResults)):
-        if (foldResults[fold] > bestModel):
-            bestModel = fold
-    
-    bestModel = foldPriosAndLikelihoods[bestModel]
-
-    # test current model on current fold
-    result = NBAlgorithm.useModel(bestModel[0], bestModel[1], bestModel[2], bestModel[3], evalSet)
-
-    # evaluate model
-    evaluation = NBAlgorithm.evaluateModel(result, evalSet)
-    
-
 class NaiveBayesModel:
     def __init__(self, attributeLabels):
         self.labels = attributeLabels
@@ -127,14 +70,6 @@ class NaiveBayesModel:
         
         return emailPredictions
 
-    def evaluateModel(self, result, evalSet):
-        count = 0
-        for email in range(len(evalSet)):
-            if (result[email] == int(evalSet[email][-1])):
-                count += 1
-        average = count / len(evalSet)
-        return average
-
     def naiveBayes(self, evalStartIndex, evalEndIndex, dataset):
         # initialize training set (all other folds, not current fold)
         trainingSet = dataset[:evalStartIndex] + dataset[evalEndIndex + 1:len(dataset)]
@@ -148,12 +83,4 @@ class NaiveBayesModel:
         # test current model on current fold
         result = self.useModel(spamPrior, hamPrior, spamLikelihoods, hamLikelihoods, evalSet)
 
-        # evaluate model
-        evaluation = self.evaluateModel(result, evalSet)
-
-        return evaluation, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods
-        
-
-        
-
-main("spambase.csv", 0.8)
+        return result, spamPrior, hamPrior, spamLikelihoods, hamLikelihoods
