@@ -1,35 +1,29 @@
 import math
 import random
-import numpy as np
 from sklearn.metrics import pairwise_distances
+import numpy as np
 
 class KNearestNeighbor:
     def __init__(self, attributes):
         self.labels = attributes
-        self.numOfXVals = len(self.labels) - 1
-    
-    def evalEmailEucl(self, evalEmail, trainingSet):
-        # index 0 is euclidian distance; index 1 is email's class
-        euclidianDistance = (100000,0)
-        for email in trainingSet:
-            distance = 0
-            for attribute in range(self.numOfXVals):
-                distance += (float(evalEmail[attribute]) - float(email[attribute])) ** 2
-                if (math.sqrt(distance) > euclidianDistance[0]):
-                    break
-
-            if (math.sqrt(distance) < euclidianDistance[0]):
-                euclidianDistance = (distance, int(email[-1]))
-        
-        return euclidianDistance[1]  
+        self.numOfXVals = len(self.labels) - 1 
 
     def classifySet(self, evalSet, trainingSet):
+        # get trainingSet without target column
+        trainingEmails = [row[:-1] for row in trainingSet]
+
+        # get evalSet without target column
+        if (len(evalSet[0]) == len(trainingSet[0])):
+            evalEmails = [row[:-1] for row in evalSet]
+
+        # calculate distance between each email in evalSet and trainingEmails
+        distances = pairwise_distances(evalEmails, trainingEmails)
+
+        # get prediction for each email
         result = []
-        for email in evalSet:
-            pred = self.evalEmailEucl(email, trainingSet)
-            if (pred > 0.5):
-                result.append(1)
-            else:
-                result.append(0)
+        for email in range(len(evalSet)):
+            # get class of nearest neighbor to current email
+            result.append(int(trainingSet[np.argmin(distances[email])][-1]))
 
         return result
+

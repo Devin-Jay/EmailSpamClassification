@@ -41,7 +41,7 @@ def main(fileName, trainingPct):
     foldResults = []
     evalResults = []
     allModelResults = []
-    
+
     ### NAIVE BAYES ###
     # loop through training (increment by size of training // 5 for 5 cross validation)
     for fold in range(0, len(trainingSet) - (len(trainingSet) // K), len(trainingSet) // K):
@@ -132,6 +132,7 @@ def main(fileName, trainingPct):
     allModelResults.append(perf.average(foldResults, K))
     allModelResults.append(perf.average(evalResults, K))
 
-    print(allModelResults)
+    for result in allModelResults:
+        print(result)
 
 main("spambase.csv",0.8)
