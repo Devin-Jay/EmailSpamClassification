@@ -1,76 +1,59 @@
 import random
 import math
+import numpy as np
+from sklearn.metrics import accuracy_score
 
 class LogisticRegression:
     def __init__(self, attributeLabels):
         self.labels = attributeLabels
         self.numOfXVals = len(self.labels) - 1
     
-    def getXVals(self, trainingSet):
-        # add one more for bias
-        xVals = [0] * self.numOfXVals
-        
-        for email in range(len(trainingSet)):
-            for attribute in range(self.numOfXVals):
-                xVals[attribute] += float(trainingSet[email][attribute])
-        
-        trainingSetSize = len(trainingSet)
-        for attribute in range(self.numOfXVals):
-            xVals[attribute] /= trainingSetSize
-        
-        return xVals
-    
     def getYVal(self, trainingSet):
-        yVal = 0
+        yVal = []
         for email in range(len(trainingSet)):
-            yVal += float(trainingSet[email][-1])
-        
-        yVal /= len(trainingSet)
+            yVal.append(int(trainingSet[email][-1]))
         
         return yVal
     
-    def sigmoid(self, model, xVals):
-        linearYVal = 0
-        for attribute in range(self.numOfXVals):
-            linearYVal += model[attribute] * float(xVals[attribute])
-        # add the bias
-        linearYVal += model[-1]
-
-        # return sigmoid y val
-        return 1 / (1 + math.exp(-linearYVal))
+    def sigmoid2(self, x):
+        clippedX = np.clip(x,-500,500)
+        return 1 / (1 + np.exp(-clippedX))
 
     def gradientDescent(self, trainingSet, learningRate, iterations):
-        # initialize weights with random num between 0 and 1 for each attribute (plus 1 for bias)
-        actualWeights = [random.uniform(0,1) for attribute in range(self.numOfXVals + 1)]
+        # get classifiers of all emails in trainingSet
+        yVal = np.array(self.getYVal(trainingSet))
 
-        xVals = self.getXVals(trainingSet)
-        yVal = self.getYVal(trainingSet)
+        # get trainingSet without target column
+        xWithBias = []
+        for email in trainingSet:
+            floatEmail =  [round(float(x),2) for x in email]
+            xWithBias.append([0] + floatEmail)
+        xWithBias = np.array(xWithBias)
 
+        # get len of dataset
+        m, n = xWithBias.shape
+
+        # get model initialized with 0s
+        model =  np.zeros(n)
+
+        # fit line
         for i in range(iterations):
-            # get predicted y
-            predY = self.sigmoid(actualWeights, xVals)
+            predY = self.sigmoid2(np.dot(xWithBias,model))
+            gm = np.dot(xWithBias.T, (predY - yVal)) / m
+            model -= (learningRate * gm)
 
-            for attribute in range (self.numOfXVals):
-                # calculate the gradient of attribute
-                gradient = (2/len(trainingSet)) * (predY - yVal) * xVals[attribute]
+        return model
 
-                # update actual weights
-                actualWeights[attribute] -= (learningRate * gradient)
-            
-            # update bias
-            gradient = (2/len(trainingSet)) * (predY - yVal) * actualWeights[-1]
-            actualWeights[-1] -= (learningRate * gradient)
-        
-        return actualWeights
-    
     def useModel(self, weights, evalSet):
         emailPredictions = []
 
         for email in evalSet:
             prediction = 0
-            for attribute in range(len(email)):
+            for attribute in range(1,len(email) - 1):
                 prediction += weights[attribute] * float(email[attribute])
             
+            prediction += weights[0]
+
             if (prediction > 0.5):
                 emailPredictions.append(1)
             else:
@@ -83,7 +66,7 @@ class LogisticRegression:
         trainingSet = dataset[:startIndex] + dataset[endIndex + 1:len(dataset)]
 
         # fit logistic regression line to graph
-        weights = self.gradientDescent(trainingSet, 0.001, 1000)
+        weights = self.gradientDescent(trainingSet, 0.000001, 1000)
 
         # test on fold
         results = self.useModel(weights, dataset[startIndex:endIndex])

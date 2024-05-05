@@ -15,6 +15,12 @@ def importDataset(fileName):
             dataset[email] = dataset[email].split(",")
     return dataset
 
+def printPerformance(performanceTuple):
+    print("Accuracy: ", performanceTuple[0])
+    print("False Positives: ", performanceTuple[1])
+    print("True Positives: ", performanceTuple[2])
+    print("Area Under Curve: ", performanceTuple[3])
+
 def main(fileName, trainingPct):
 
     # get dataset
@@ -132,7 +138,22 @@ def main(fileName, trainingPct):
     allModelResults.append(perf.average(foldResults, K))
     allModelResults.append(perf.average(evalResults, K))
 
-    for result in allModelResults:
-        print(result)
+    print()
+    for performance in range(len(allModelResults)):
+        if (performance == 0):
+            print("Naive Bayes Fold Average:")
+        elif (performance == 1):
+            print("Naive Bayes EvalSet Average:")
+        elif (performance == 2):
+            print("Linear Regression Fold Average::")
+        elif (performance == 3):
+            print("Linear Regression EvalSet Average::")
+        elif (performance == 4):
+            print("K Nearest Neighbor Fold Average::")
+        else:
+            print("K Nearest Neighbor EvalSet Average::")
+
+        printPerformance(allModelResults[performance])
+        print()
 
 main("spambase.csv",0.8)
